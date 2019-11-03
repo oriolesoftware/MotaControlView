@@ -36,7 +36,7 @@
   left: 50%;
   -webkit-transform: translate(-50%, -50%);
           transform: translate(-50%, -50%);
-  background-color: #F88863;
+  background-color: #5cadff;
   width: 5px;
   height: 5px;
   border-radius: 100%;
@@ -50,7 +50,7 @@
 .loading .spinner .spin .branch:nth-child(1) {
   -webkit-animation: extend1 2s ease-out infinite;
           animation: extend1 2s ease-out infinite;
-  background-color: #AC4147;
+  background-color: #2b85e4;
 }
 .loading .spinner .spin .branch:nth-child(1):before, .loading .spinner .spin .branch:nth-child(1):after {
   width: 10px;

@@ -15,6 +15,7 @@ const routers = [
     },
     {
         path: '/UploadFile',
+        name: 'UploadFile',
         meta: {
             title: '上传文件'
         },
@@ -53,9 +54,24 @@ const routers = [
         component: (resolve) => require(['./views/Print.vue'], resolve)
     },
     {
+        path: '/Scan',
+        name: 'Scan',
+        meta: {
+            title: '文件扫描'
+        },
+        component: (resolve) => require(['./views/Scan.vue'], resolve)
+    },{
+        path: '/StopServer',
+        name: '',
+        meta: {
+            title: '服务终止'
+        },
+        component: (resolve) => require(['./views/StopServer.vue'], resolve)
+    },
+    {
         path: '/Loading',
         name: 'Loading',
         component: (resolve) => require(['./animation/loading.vue'], resolve)
-    },
+    }
 ];
 export default routers;

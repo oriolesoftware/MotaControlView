@@ -15,6 +15,7 @@ Vue.use(iView);
 
 // 路由配置
 const RouterConfig = {
+    base:'/controllerView/',
     mode: 'history',
     routes: Routers
 };
@@ -36,9 +37,25 @@ new Vue({
     router: router,
     data: function(){
         return {
-            deviceID: "CSUCYY01",
+            /*设备ID*/
+            deviceID: "",
+            /*用户随机标识*/
             randomCode:"",
+            /*设备服务器URL*/
+            serverUrl:"",
+            websocketUrl:"",
+            /*默认倒计时时间*/
+            countdownReturnTime: 0,
+            /*倒计时ClockID*/
+            countdownClock: 0,
+            /*全局背景*/
+            background: {
+                backgroundImage: "url(" + require("./images/background.png") + ")",
+                backgroundPosition: "center",
+                backgroundSize: "cover"
+            },
         }
     },
     render: h => h(App),
 });
+
