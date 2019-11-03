@@ -1,6 +1,6 @@
 <style scoped>
     * {
-        font-family: "站酷小薇LOGO体";
+        font-family: "PingFang SC Semibold";
         overflow: hidden;
     }
 
@@ -42,14 +42,16 @@
                     <Step title="待进行" content="设备打印"></Step>
                 </Steps>
             </Header>
-            <Content style="height: 100%;padding-top: 2%;padding-left: 2%;padding-right: 2%" :style="background">
+            <Content style="height: 100%;padding-top: 2%;padding-left: 2%;padding-right: 2%"
+                     :style="this.$root.background">
+                <v-exception ref="exceptionModel"></v-exception>
                 <Row>
                     <p style="text-align:center;font-size: 18px;">MOTA校园 · 免费自助打印设备</p>
                     <p style="text-align:center;font-size: 40px;">请设置打印参数</p>
                 </Row>
                 <Row style="height:80%;">
                     <Col span="8"
-                         style="height:100%;align-items:center;display:flex;flex-direction:column;justify-content:center">
+                         style="height:100%;align-items:center;display:flex;flex-direction:column;">
                         <Alert type="warning" show-icon v-if="loading">
                             由于页面较多，因此页面预览加载尚未完成
                             <template slot="desc">
@@ -57,7 +59,7 @@
                                 当前加载第 {{filePageSize}} 页，共{{finalFilePageSize}} 页
                             </template>
                         </Alert>
-                        <img ref="PreviewPic" style="margin: 10px;max-height: 350px;max-width: 450px">
+                        <img ref="PreviewPic" style="margin: 10px;max-height: 360px;max-width: 460px">
                         <Page :total="filePageSize" :page-size="1" prev-text="Previous" next-text="Next"
                               @on-change="selectPage"/>
                         <Spin fix v-if="multiPagePreviewRefresh" v-on:click.native="splicingPage()">
@@ -144,7 +146,7 @@
                                     </Switch>
                                 </Cell>
                                 <Cell title="页面张数" label="Page Count" :disabled="!multiPage">
-                                    <RadioGroup v-model="pageCount" type="button" slot="extra"
+                                    <RadioGroup v-model="multiPageCount" type="button" slot="extra"
                                                 @on-change="setPageCount()">
                                         <Radio label="2" :disabled="!multiPage">2</Radio>
                                         <Radio label="4" :disabled="!multiPage">4</Radio>
@@ -157,27 +159,27 @@
                                 <Cell title="自定义页面张数" label="Custom Page Count" :disabled="!multiPage">
                                     <Button icon="md-add" type="primary" shape="circle" slot="extra" size="small"
                                             v-on:click="setRow('add')"
-                                            :disabled="pageCount!='Custom'||!multiPage"></Button>
-                                    <Input v-model="row_num" readonly slot="extra"
-                                           :disabled="pageCount!='Custom'||!multiPage"
+                                            :disabled="multiPageCount!='Custom'||!multiPage"></Button>
+                                    <Input v-model="multiPageRowNum" readonly slot="extra"
+                                           :disabled="multiPageCount!='Custom'||!multiPage"
                                            style="width: 40px; margin-right: 10px;margin-left:10px;"/>
                                     <Button icon="md-remove" type="primary" shape="circle" slot="extra" size="small"
                                             v-on:click="setRow('remove')"
-                                            :disabled="pageCount!='Custom'||!multiPage"></Button>
+                                            :disabled="multiPageCount!='Custom'||!multiPage"></Button>
                                     <span slot="extra"> 行 </span>
                                     <Button icon="md-add" type="primary" shape="circle" slot="extra" size="small"
                                             v-on:click="setCol('add')"
-                                            :disabled="pageCount!='Custom'||!multiPage"></Button>
-                                    <Input v-model="col_num" readonly slot="extra"
-                                           :disabled="pageCount!='Custom'||!multiPage"
+                                            :disabled="multiPageCount!='Custom'||!multiPage"></Button>
+                                    <Input v-model="multiPageColNum" readonly slot="extra"
+                                           :disabled="multiPageCount!='Custom'||!multiPage"
                                            style="width: 40px; margin-right: 10px;margin-left:10px;"/>
                                     <Button icon="md-remove" type="primary" shape="circle" slot="extra" size="small"
                                             v-on:click="setCol('remove')"
-                                            :disabled="pageCount!='Custom'||!multiPage"></Button>
+                                            :disabled="multiPageCount!='Custom'||!multiPage"></Button>
                                     <span slot="extra"> 列 </span>
                                 </Cell>
                                 <Cell title="页面顺序" label="Page Order" style="height: 60px" :disabled="!multiPage">
-                                    <RadioGroup v-model="pageOrder" type="button" slot="extra"
+                                    <RadioGroup v-model="multiPageOrder" type="button" slot="extra"
                                                 @on-change="multiPagePreviewRefresh=true">
                                         <Radio style="height: 50px;padding: 5px;text-align: center;" label="Z"
                                                :disabled="!multiPage"><img src="../images/Z.png" height="40"/></Radio>
@@ -192,10 +194,14 @@
                                     </RadioGroup>
                                 </Cell>
                                 <Cell title="页面方向" label="Page Orientation" :disabled="!multiPage">
-                                    <RadioGroup v-model="pageOrientation" type="button" slot="extra"
+                                    <RadioGroup v-model="multiPageOrientation" type="button" slot="extra"
                                                 :disabled="!multiPage" @on-change="multiPagePreviewRefresh=true;">
-                                        <Radio label="transverse" :disabled="!multiPage" v-on:click.native="turningMode='TUMBLE'">横向</Radio>
-                                        <Radio label="lengthwise" :disabled="!multiPage" v-on:click.native="turningMode='DUPLEX'">纵向</Radio>
+                                        <Radio label="transverse" :disabled="!multiPage"
+                                               v-on:click.native="turningMode='TUMBLE'">横向
+                                        </Radio>
+                                        <Radio label="lengthwise" :disabled="!multiPage"
+                                               v-on:click.native="turningMode='DUPLEX'">纵向
+                                        </Radio>
                                     </RadioGroup>
                                 </Cell>
                                 <Cell title="双面打印" label="Duplex">
@@ -216,40 +222,23 @@
                 </Row>
             </Content>
             <Footer><p class="layout-footer-center">&copy; Copyright 2018-2019 Oriole(MOTA). All Rights Reserved.</p>
-                <Button type="error" style="font-size:16px;position: absolute; right: 10px; bottom:10px;"
-                        v-on:click="countdownDo()">
-                    <Icon type="md-exit"/>
-                    退出
-                    <span style="color: #FA8072">[{{countdownReturnTime}} 秒]</span>
-                </Button>
+                <v-countdownButton ref="countdown" style="position: absolute; right: 10px; bottom:10px;"></v-countdownButton>
             </Footer>
         </Layout>
     </div>
 </template>
 <script>
     import * as axios from "axios";
+    import ExceptionModel from '../components/ExceptionModel.vue';
+    import CountdownButton from '../components/CountdownButton.vue';
 
     export default {
+        components: {
+            'v-exception': ExceptionModel,
+            'v-countdownButton': CountdownButton,
+        },
         data() {
             return {
-                /*
-                * 倒计时相关
-                */
-                /*默认倒计时时间*/
-                countdownReturnTime: 240,
-                /*倒计时ClockID*/
-                countdownClock: 0,
-
-                /*
-                * 固定数据
-                */
-                /*背景*/
-                background: {
-                    backgroundImage: "url(" + require("../images/background.svg") + ")",
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                },
-
                 /*
                 * 临时数据
                 */
@@ -266,7 +255,7 @@
                 multiPagePreviewRefresh: false,
                 multiPagePreviewRefreshLoading: false,
                 /*原始文件类型*/
-                fileType:"",
+                fileType: "",
                 /*
                 * 打印配置数据
                 */
@@ -289,114 +278,93 @@
                 /*一张多页拼合打印（T/F）*/
                 multiPage: false,
                 /*一张多页打印 行*/
-                row_num: 2,
+                multiPageRowNum: 2,
                 /*一张多页打印 列*/
-                col_num: 1,
+                multiPageColNum: 1,
                 /*一张多页打印 页面前进顺序（Z,anti_Z,N,anti_N）*/
-                pageOrder: "Z",
+                multiPageOrder: "Z",
                 /*一张多页打印 方向（transverse‘横向’,lengthwise‘纵向’）*/
-                pageOrientation: "lengthwise",
+                multiPageOrientation: "lengthwise",
                 /*一张多页打印 行列模式（2‘二行一列’,4‘二行二列’,6‘二行三列’,9‘三行三列’,16‘四行四列’,Custom‘自定义’）*/
-                pageCount: "2",
+                multiPageCount: "2",
                 autoAdjustmentFlag: "",
             }
         },
         mounted() {
-            this.countDownStart();
+            this.$refs.countdown.countDownStart(240);
             this.initWebSocket();
         },
         methods: {
-            countDownStart() {
-                this.countdownClock = window.setInterval(() => {
-                    this.countdownReturnTime--;
-                    if (this.countdownReturnTime < 0) {
-                        this.countdownDo();
-                    }
-                }, 1000)
-            },
-            countdownDo() {
-                clearInterval(this.countdownClock);
-                this.$router.push("/");
-            },
             countdownReset() {
-                this.countdownReturnTime = 240;
+                this.$refs.countdown.countdownReset(240);
             },
             initWebSocket() { //初始化weosocket
                 const url = 'ws://localhost:8999/PreviewLoading/' + this.pdfFileName;
                 this.websock = new WebSocket(url);
-                this.websock.onmessage = this.websocketonmessage;
-                this.websock.onopen = this.websocketonopen;
-                this.websock.onerror = this.websocketonerror;
-                this.websock.onclose = this.websocketclose;
+                this.websock.onmessage = this.websocketOnMessage;
+                this.websock.onopen = this.websocketOnOpen;
+                this.websock.onerror = this.websocketOnError;
+                this.websock.onclose = this.websocketClose;
             },
-            websocketonopen() { //连接建立之后执行send方法发送数据
-                console.log("连接建立");
+            websocketOnOpen() { //连接建立之后执行send方法发送数据
+                console.log("Successful establishment of WebSocket connection");
             },
-            websocketonerror(e) {//连接建立失败重连
+            websocketOnError(e) {//连接建立失败重连
                 console.log(e);
                 this.initWebSocket();
             },
-            websocketonmessage(sendback) {
-                console.log("回传数据");
-                var data = JSON.parse(sendback.data);
-                if (data.state == 'SUCCESS') {
-                    if (data.code == "01") {
-                        this.finalFilePageSize = parseInt(data.msg);
+            websocketOnMessage(sendback) {
+                var responseData = JSON.parse(sendback.data);
+                if (responseData.state == 'SUCCESS') {
+                    if (responseData.code == "01") {
+                        this.finalFilePageSize = parseInt(responseData.msg);
                     } else {
-                        this.filePageSize = parseInt(data.msg);
-                        this.endPage = parseInt(data.msg);
+                        this.filePageSize = parseInt(responseData.msg);
+                        this.endPage = parseInt(responseData.msg);
                         if (this.filePageSize == this.finalFilePageSize) {
                             this.loading = false;
                         }
                     }
-                    if (parseInt(data.msg) == 1) {
+                    if (parseInt(responseData.msg) == 1) {
                         this.selectPage(1);
                     }
+                } else {
+                    this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, responseData.msg, responseData.code, responseData.state);
                 }
             },
-            websocketsend(Data) {//数据发送
+            websocketSend(Data) {//数据发送
                 this.websock.send(Data)
             },
-            websocketclose(e) {  //关闭
+            websocketClose(e) {  //关闭
                 console.log('断开连接', e)
             },
             selectPage(Page) {
+                var requestParam = {
+                    method: 'get',
+                    url: null,
+                    responseType: 'arraybuffer',
+                    params: {
+                        fileName: this.pdfFileName,
+                        page: parseInt(Page) - 1,
+                    }
+                };
                 if (this.multiPage) {
-                    this.multiPagePreviewRefreshLoading = true;
-                    axios({
-                        method: 'get',
-                        url: 'http://localhost:8999/getSplicingPageThumbnail',
-                        responseType: 'arraybuffer',
-                        params: {
-                            fileName: this.pdfFileName,
-                            page: parseInt(Page) - 1,
-                        }
-                    }).then(response => {
-                        return 'data:image/png;base64,' + btoa(new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-                    }).then(data => {
-                        this.multiPagePreviewRefreshLoading = false;
-                        this.$refs.PreviewPic.src = data;
-                    });
+                    requestParam.url = 'http://localhost:8999/getSplicingPageThumbnail';
                 } else {
-                    axios({
-                        method: 'get',
-                        url: 'http://localhost:8999/getSinglePageThumbnail',
-                        responseType: 'arraybuffer',
-                        params: {
-                            fileName: this.pdfFileName,
-                            page: parseInt(Page) - 1,
-                        }
-                    }).then(response => {
-                        return 'data:image/png;base64,' + btoa(new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-                    }).then(data => {
-                        this.multiPagePreviewRefresh=false;
-                        this.multiPagePreviewRefreshLoading = false;
-                        this.$refs.PreviewPic.src = data;
-                    });
+                    requestParam.url = 'http://localhost:8999/getSinglePageThumbnail';
                 }
+                this.multiPagePreviewRefreshLoading = true;
+                axios(requestParam).then(response => {
+                    return 'data:image/png;base64,' + btoa(new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+                }).then(data => {
+                    this.multiPagePreviewRefreshLoading = false;
+                    this.$refs.PreviewPic.src = data;
+                }).catch((reason) => {
+                    this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, reason.toString());
+                });
             },
             setAutoAdjustment() {
-                if(this.multiPage==false) {
+                if (this.multiPage == false) {
                     axios({
                         method: 'get',
                         url: 'http://localhost:8999/documentTypePrediction',
@@ -404,49 +372,55 @@
                             fileName: this.pdfFileName,
                         }
                     }).then((response) => {
-                        let responsedata = response.data;
-                        if (responsedata.state == "SUCCESS") {
-                            this.fileType = responsedata.msg;
-                            if (this.fileType == "Unknow_Lengthwise") {
-                                this.autoAdjustmentFlag = "FIX_L_Model";
-                                this.autoAdjustmentConfirm();
-                            } else if (this.fileType == "A4_lengthwise" || this.FileType == "A4_transverse") {
-                                this.sendParam();
-                            } else if (this.fileType == "Unknow_Transverse") {
-                                this.autoAdjustmentFlag = "FIX_T_Model";
-                                this.autoAdjustmentConfirm();
-                            } else if (this.fileType == "PPT"){
-                                this.autoAdjustmentFlag = "FIX_T_Model";
-                                this.$Modal.confirm({
-                                    title: '检测到通用PowerPoint文件',
-                                    content: '<p>通常情况下PowerPoint打印时将根据纸张调整大小。</p>' +
-                                        '<br/><p>您可以手动关闭这一调整选项。但若您<span style="color:#f60;">拒绝</span>根据纸张调整大小选项，<span style="color:#f60;">可能导致页面印刷不全、位置偏移等意外情况</span>，宜悉知！</p>',
-                                    loading: true,
-                                    okText: '没问题，请自动调整',
-                                    cancelText: '不，不要自动调整文档',
-                                    onOk: () => {
-                                        this.autoAdjustment();
-                                    },
-                                    onCancel: () => {
-                                        this.sendParam();
-                                        this.$Modal.remove();
-                                    }
-                                });
+                        let responseData = response.data;
+                        if (responseData.state == "SUCCESS") {
+                            this.fileType = responseData.msg;
+                            switch (this.fileType) {
+                                case "Unknow_Transverse":
+                                    this.autoAdjustmentFlag = "FIX_T_Model";
+                                    this.autoAdjustmentConfirm("Unknown");
+                                    break;
+                                case "Unknow_Lengthwise":
+                                    this.autoAdjustmentFlag = "FIX_L_Model";
+                                    this.autoAdjustmentConfirm("Unknown");
+                                    break;
+                                case "A4_lengthwise":
+                                case "A4_transverse":
+                                    this.sendParam();
+                                    break;
+                                case "PPT":
+                                    this.autoAdjustmentFlag = "FIX_T_Model";
+                                    this.autoAdjustmentConfirm("PPT");
+                                    break;
                             }
+                        } else {
+                            this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, responseData.msg, responseData.code, responseData.state);
                         }
-                    }).catch(function (error) {
-                        console.log(error);
+                    }).catch((reason) => {
+                        this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
                     });
-                }else{
+                } else {
                     this.sendParam();
                 }
             },
-            autoAdjustmentConfirm(){
+            autoAdjustmentConfirm(type) {
+                let title, content;
+                switch (type) {
+                    case "PPT":
+                        title = '检测到通用PowerPoint文件';
+                        content = '<p>通常情况下PowerPoint打印时将根据纸张调整大小。</p>' +
+                            '<br/><p>您可以手动关闭这一调整选项。但若您<span style="color:#f60;">拒绝</span>根据纸张调整大小选项，<span style="color:#f60;">可能导致页面印刷不全、位置偏移等意外情况</span>，宜悉知！</p>';
+                        break;
+                    default:
+                        title = '未知纸张适应类型';
+                        content = '<p>在通常情况下这一意外不会发生，除非您使用了意外的文档编辑器或文档页面大小确实超过A4纸大小。</p>' +
+                            '<br/><p>为保证良好的印刷效果，墨拓将自动调整您的页面边距，并对页面进行缩放以确保可以完美印刷</p>' +
+                            '<br/><p>您可以手动关闭这一调整选项。但若您<span style="color:#f60;">拒绝</span>自动调整文档尺寸，<span style="color:#f60;">可能导致页面印刷不全、位置偏移等意外情况</span>，宜悉知！</p>';
+                        break;
+                }
                 this.$Modal.confirm({
-                    title: '未知纸张适应类型',
-                    content: '<p>在通常情况下这一意外不会发生，除非您使用了意外的文档编辑器或文档页面大小确实超过A4纸大小。</p>' +
-                        '<br/><p>为保证良好的印刷效果，墨拓将自动调整您的页面边距，并对页面进行缩放以确保可以完美印刷</p>' +
-                        '<br/><p>您可以手动关闭这一调整选项。但若您<span style="color:#f60;">拒绝</span>自动调整文档尺寸，<span style="color:#f60;">可能导致页面印刷不全、位置偏移等意外情况</span>，宜悉知！</p>',
+                    title: title,
+                    content: content,
                     loading: true,
                     okText: '没问题，请自动调整',
                     cancelText: '不，不要自动调整文档',
@@ -459,54 +433,48 @@
                     }
                 });
             },
-            autoAdjustment(){
+            autoAdjustment() {
                 this.multiPagePreviewRefresh = true;
-                if(this.autoAdjustmentFlag == "FIX_L_Model"){
-                    this.multiPage=true;
-                    this.row_num=1;
-                    this.col_num=1;
-                    this.pageOrder="Z";
-                    this.pageOrientation="lengthwise";
-                    this.pageCount="Custom";
-                }
-                if(this.autoAdjustmentFlag == "FIX_T_Model"){
-                    this.multiPage=true;
-                    this.row_num=1;
-                    this.col_num=1;
-                    this.pageOrder="Z";
-                    this.pageOrientation="transverse";
-                    this.pageCount="Custom";
-                    this.turningMode="TUMBLE";
-                }
-                if(!this.loading) {
+                this.multiPage = true;
+                this.multiPageRowNum = 1;
+                this.multiPageColNum = 1;
+                this.multiPageOrder = "Z";
+                this.multiPageOrientation = (this.autoAdjustmentFlag === "FIX_L_Model") ? "lengthwise" : "transverse";
+                this.turningMode = (this.autoAdjustmentFlag === "FIX_L_Model") ? "DUPLEX" : "TUMBLE";
+                this.multiPageCount = "Custom";
+                if (!this.loading) {
                     axios({
                         method: 'get',
                         url: 'http://localhost:8999/splicingPage',
                         params: {
                             fileName: this.pdfFileName,
                             pageCount: this.finalFilePageSize,
-                            col: this.col_num,
-                            row: this.row_num,
-                            direction: this.pageOrientation,
-                            pageOrder: this.pageOrder,
+                            multiPageColNum: this.multiPageColNum,
+                            multiPageRowNum: this.multiPageRowNum,
+                            multiPageOrientation: this.multiPageOrientation,
+                            multiPageOrder: this.multiPageOrder,
                         }
                     }).then((response) => {
-                        let responsedata = response.data;
-                        if (responsedata.state == "SUCCESS") {
+                        let responseData = response.data;
+                        if (responseData.state == "SUCCESS") {
                             this.multiPagePreviewRefresh = false;
                             this.sendParam();
                             this.$Modal.remove();
+                        } else {
+                            this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, responseData.msg, responseData.code, responseData.state);
                         }
-                    }).catch(function (error) {
-                        console.log(error);
+                    }).catch((reason) => {
+                        this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
                     });
-                }else{
+                } else {
                     this.$Modal.remove();
-                    this.$Message.error('在页面全部加载完毕前，不能自动调整页面，请等待加载完毕后重试');
+                    this.$Notice.warning({
+                        title: '注意',desc:'在页面全部加载完毕前，不能自动调整页面，请等待加载完毕后重试'
+                    });
                 }
             },
             sendParam() {
-                if(!this.multiPagePreviewRefresh && !this.multiPagePreviewRefreshLoading) {
+                if (!this.multiPagePreviewRefresh && !this.multiPagePreviewRefreshLoading) {
                     axios({
                         method: 'get',
                         url: 'http://localhost:8999/setPrintingParam',
@@ -523,59 +491,63 @@
                             collate: this.collate,
 
                             multiPage: this.multiPage,
-                            row_num: this.row_num,
-                            rol_num: this.col_num,
-                            pageOrder: this.pageOrder,
-                            pageOrientation: this.pageOrientation,
-                            pageCount: this.pageCount,
+                            multiPageRowNum: this.multiPageRowNum,
+                            multiPageColNum: this.multiPageColNum,
+                            multiPageOrder: this.multiPageOrder,
+                            multiPageOrientation: this.multiPageOrientation,
+                            multiPageCount: this.multiPageCount,
 
                             duplex: this.duplex,
                             turningMode: this.turningMode,
                         }
                     }).then((response) => {
-                        let responsedata = response.data;
-                        if (responsedata.state == "SUCCESS") {
+                        let responseData = response.data;
+                        if (responseData.state == "SUCCESS") {
                             clearInterval(this.countdownClock);
                             this.$router.push({
                                 name: 'ChooseServiceType',
                                 params: {
-                                    direction: this.pageOrientation,
+                                    direction: this.multiPageOrientation,
                                 }
                             });
+                        } else {
+                            this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, responseData.msg, responseData.code, responseData.state);
                         }
-                    }).catch(function (error) {
-                        console.log(error);
+                    }).catch((reason) => {
+                        this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
                     });
-                }else {
-                    this.$Message.error('在一张多页预览加载完毕前，不能提交打印任务，请等待加载完毕后重试');
+                } else {
+                    this.$Notice.warning({
+                        title: '注意',desc:'在一张多页预览加载完毕前，不能提交打印任务，请等待加载完毕后重试'
+                    });
                 }
             },
             setPageCount() {
                 this.multiPagePreviewRefresh = true;
-                switch (this.pageCount) {
+                switch (this.multiPageCount) {
                     case "2":
-                        this.col_num = 1;
-                        this.row_num = 2;
+                        this.multiPageColNum = 1;
+                        this.multiPageRowNum = 2;
                         break;
                     case "4":
-                        this.col_num = 2;
-                        this.row_num = 2;
+                        this.multiPageColNum = 2;
+                        this.multiPageRowNum = 2;
                         break;
                     case "6":
-                        this.col_num = 3;
-                        this.row_num = 2;
+                        this.multiPageColNum = 3;
+                        this.multiPageRowNum = 2;
                         break;
                     case "9":
-                        this.col_num = 3;
-                        this.row_num = 3;
+                        this.multiPageColNum = 3;
+                        this.multiPageRowNum = 3;
                         break;
                     case "16":
-                        this.col_num = 4;
-                        this.row_num = 4;
+                        this.multiPageColNum = 4;
+                        this.multiPageRowNum = 4;
                         break;
                     case "Custom":
-                        this.col_num = 2;
-                        this.row_num = 2;
+                        this.multiPageColNum = 2;
+                        this.multiPageRowNum = 2;
                         break;
                 }
             },
@@ -585,7 +557,7 @@
                     this.nowPage = 1;
                     this.selectPage(1);
                 } else {
-                    if(!this.loading) {
+                    if (!this.loading) {
                         this.multiPagePreviewRefresh = false;
                         this.multiPagePreviewRefreshLoading = true;
                         axios({
@@ -594,37 +566,50 @@
                             params: {
                                 fileName: this.pdfFileName,
                                 pageCount: this.finalFilePageSize,
-                                col: this.col_num,
-                                row: this.row_num,
-                                direction: this.pageOrientation,
-                                pageOrder: this.pageOrder,
+                                multiPageColNum: this.multiPageColNum,
+                                multiPageRowNum: this.multiPageRowNum,
+                                multiPageOrientation: this.multiPageOrientation,
+                                multiPageOrder: this.multiPageOrder,
                             }
                         }).then((response) => {
-                            let responsedata = response.data;
-                            if (responsedata.state == "SUCCESS") {
-                                this.filePageSize = parseInt(responsedata.msg);
-                                this.endPage = parseInt(responsedata.msg);
+                            let responseData = response.data;
+                            if (responseData.state == "SUCCESS") {
+                                this.filePageSize = parseInt(responseData.msg);
+                                this.endPage = parseInt(responseData.msg);
                                 this.selectPage(1);
                                 this.nowPage = 1;
+                            } else {
+                                this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, responseData.msg, responseData.code, responseData.state);
                             }
-                        }).catch(function (error) {
-                            console.log(error);
+                        }).catch((reason) => {
+                            this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
                         });
-                    }else{
-                        this.$Message.error('在页面全部加载完毕前，一张多页无法预览');
+                    } else {
+                        this.$Notice.warning({
+                            title: '注意',desc:'在页面全部加载完毕前，一张多页无法预览'
+                        });
                     }
                 }
             },
             setCopies(action) {
                 switch (action) {
                     case "add":
-                        this.copies = this.copies + 1;
+                        if ((this.duplex&&this.copies*this.finalFilePageSize > 100)
+                            ||(!this.duplex&&this.copies*this.finalFilePageSize > 50)) {
+                            this.$Notice.warning({
+                                title: '注意',desc:'单次打印的总页数不能超过50页哦，超大文件若需多份请分开打印哦'
+                            });
+                        }else{
+                            this.copies = this.copies + 1;
+                        }
                         break;
                     case "remove":
                         if (this.copies > 1) {
                             this.copies = this.copies - 1;
                         } else {
-                            this.$Message.error('至少需要印刷一份呢亲亲~');
+                            this.$Notice.warning({
+                                title: '注意',desc:'至少需要印刷一份呢亲亲~'
+                            });
                         }
                 }
             },
@@ -634,14 +619,18 @@
                         if (this.startPage < this.endPage) {
                             this.startPage = this.startPage + 1;
                         } else {
-                            this.$Message.error('起始页不得在终结页之后呢！');
+                            this.$Notice.warning({
+                                title: '注意',desc:'起始页不得在终结页之后呢！'
+                            });
                         }
                         break;
                     case "remove":
                         if (this.startPage > 1) {
                             this.startPage = this.startPage - 1;
                         } else {
-                            this.$Message.error('已经到达首页了呢');
+                            this.$Notice.warning({
+                                title: '注意',desc:'已经到达首页了呢'
+                            });
                         }
                         break;
                 }
@@ -652,14 +641,18 @@
                         if (this.endPage < this.filePageSize) {
                             this.endPage = this.endPage + 1;
                         } else {
-                            this.$Message.error('已经到达末尾了呢');
+                            this.$Notice.warning({
+                                title: '注意',desc: '已经到达末尾了呢'
+                            });
                         }
                         break;
                     case "remove":
                         if (this.endPage > this.startPage) {
                             this.endPage = this.endPage - 1;
                         } else {
-                            this.$Message.error('终结页不得在起始页之后呢！');
+                            this.$Notice.warning({
+                                title: '注意',desc: '终结页不得在起始页之后呢！'
+                            });
                         }
                         break;
                 }
@@ -667,13 +660,21 @@
             setRow(action) {
                 switch (action) {
                     case "add":
-                        this.row_num = this.row_num + 1;
+                        if (this.multiPageRowNum <= 16) {
+                            this.multiPageRowNum = this.multiPageRowNum + 1;
+                        } else {
+                            this.$Notice.warning({
+                                title: '注意',desc: '最多不建议超过16行呢'
+                            });
+                        }
                         break;
                     case "remove":
-                        if (this.row_num > 1) {
-                            this.row_num = this.row_num - 1;
+                        if (this.multiPageRowNum > 1) {
+                            this.multiPageRowNum = this.multiPageRowNum - 1;
                         } else {
-                            this.$Message.error('最低不能小于1行呢');
+                            this.$Notice.warning({
+                                title: '注意',desc: '最低不能小于1行呢'
+                            });
                         }
                         break;
                 }
@@ -682,13 +683,21 @@
             setCol(action) {
                 switch (action) {
                     case "add":
-                        this.col_num = this.col_num + 1;
+                        if (this.multiPageColNum <= 16) {
+                            this.multiPageColNum = this.multiPageColNum + 1;
+                        }else {
+                            this.$Notice.warning({
+                                title: '注意',desc: '最多不建议超过16行呢'
+                            });
+                        }
                         break;
                     case "remove":
-                        if (this.col_num > 1) {
-                            this.col_num = this.col_num - 1;
+                        if (this.multiPageColNum > 1) {
+                            this.multiPageColNum = this.multiPageColNum - 1;
                         } else {
-                            this.$Message.error('最低不能小于1行呢');
+                            this.$Notice.warning({
+                                title: '注意',desc: '最低不能小于1行呢'
+                            });
                         }
                         break;
                 }

@@ -1,25 +1,40 @@
 <template>
-    <Carousel class="layout" autoplay v-model="Carousel" loop>
-        <CarouselItem>
-            <div class="demo-carousel">1</div>
-        </CarouselItem>
-        <CarouselItem>
-            <div class="demo-carousel">2</div>
-        </CarouselItem>
-        <CarouselItem>
-            <div class="demo-carousel">3</div>
-        </CarouselItem>
-        <CarouselItem>
-            <div class="demo-carousel">4</div>
-        </CarouselItem>
-    </Carousel>
+    <div class="layout">
+        <Layout class="layout" v-on:click.native="start()">
+            <Carousel class="layout" autoplay v-model="carousel" loop :autoplay-speed="10000" height="auto">
+                <CarouselItem v-for="list in carouselList">
+                    <div class="demo-carousel">
+                        <img :src="'http://localhost:8999/getControlScreenADImg?picName='+list.adPicFile" :width="screenWidth" :height="screenHeight"/>
+                    </div>
+                </CarouselItem>
+            </Carousel>
+        </Layout>
+    </div>
 </template>
 <script>
+    import * as axios from "axios";
+
     export default {
-        data () {
+        data() {
             return {
-                Carousel: 0
+                carousel: 0,
+                screenWidth: document.documentElement.clientWidth,
+                screenHeight: document.documentElement.clientHeight,
+                carouselList:[],
             }
+        },
+        mounted(){
+            axios({
+                method: 'get',
+                url: 'http://localhost:8999/getControlScreenADImgList',
+            }).then((response) => {
+                this.carouselList=response.data;
+            })
+        },
+        methods: {
+          start(){
+              this.$router.push("/");
+          }
         }
     }
 </script>

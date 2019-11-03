@@ -1,7 +1,7 @@
 <style scoped>
 
     * {
-        font-family: "站酷小薇LOGO体";
+        font-family: "PingFang SC Semibold";
     }
 
     .ivu-layout-header {
@@ -43,48 +43,47 @@
                     <Step title="待进行" content="设备打印"></Step>
                 </Steps>
             </Header>
-            <Content style="height: 100%;padding: 2%" :style="background">
-                <Modal v-model="fileProcessing" width="700" :closable="false" :mask-closable="false">
-                    <p slot="header" style="color:#f60;text-align:center;font-size: 16px">
-                        <Icon type="ios-information-circle"></Icon>
-                        <span>正在处理中，请稍后</span>
-                    </p>
-                    <div style="text-align:center">
-                        <iframe frameborder="0" scrolling="no" src="Loading" width="100%" height="150"></iframe>
-                        <p style="font-size: 16px">海内存知己，天涯若比邻</p>
-                        <p style="font-size: 32px">我们将很快完成</p>
-                        <p style="font-size: 16px">为了确保文档格式与打印一致，小墨正在调用WPS Office2019处理相关文件</p>
-                    </div>
-                    <div slot="footer">
-                        <img src="../images/WPS.svg" width="70px"/>
-                        <p>金山办公软件提供技术支持</p>
-
-                    </div>
-                </Modal>
+            <Content style="height: 100%;padding: 2%" :style="this.$root.background">
+                <v-exception ref="exceptionModel"></v-exception>
+                <v-preProcessModel ref="preProcessModel"></v-preProcessModel>
                 <Row>
-                    <p style="text-align:center;font-size: 18px;">MOTA校园 · 免费自助打印设备</p>
-                    <p style="text-align:center;font-size: 40px;">请选择需要打印的文件</p>
+                    <p style="text-align:center;font-size: 18px;color: #000000;">MOTA校园 · 免费自助打印设备</p>
+                    <p style="text-align:center;font-size: 40px;margin-top:5px;color: #000000;">请选择需要打印的文件</p>
                 </Row>
                 <Row>
                     <Col span="2" style="text-align:center;">
-                            <img src="../images/usb.svg" width="50px"/>
-                            <p>{{path}}</p>
+                        <Row>
+                            <Col span="24" v-for="root in roots" :key="root"
+                                 style="text-align:center;white-space:nowrap;height: 100px;overflow:hidden;text-overflow:ellipsis;margin: 10px">
+                                <a v-on:click="getFileList(root,'Directory','')">
+                                    <img src="../images/usb.svg" width="50px"/>
+                                    <p style="display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 2; white-space: normal !important;">
+                                        {{ root }}
+                                    </p>
+                                </a>
+                            </Col>
+                        </Row>
                     </Col>
                     <Col span="18">
                         <Row :style="contentHeight">
                             <CheckboxGroup v-model="checkedFile">
-                            <Col span="2" v-for="file in files" style="text-align:center;white-space:nowrap;height: 80px;overflow:hidden;text-overflow:ellipsis;margin: 10px">
-                                <a v-on:click="getFileList(file.filePath,file.fileType,file.fileName)">
-                                    <img :src="file.fileIcon" width="50px"/>
-                                    <p>
-                                        <Checkbox v-if="file.fileType!='Directory'&&file.fileType!='Top-Level'"
-                                                  :label="file.fileName">
-                                            {{ file.fileName }}
-                                        </Checkbox>
-                                        <span v-if="file.fileType=='Directory'||file.fileType=='Top-Level'">{{ file.fileName }}</span>
-                                    </p>
-                                </a>
-                            </Col>
+                                <Col span="3" v-for="file in files" :key="file.fileName"
+                                     style="text-align:center;height: 100px;overflow:hidden;margin: 10px">
+                                    <Checkbox v-if="file.fileType!='Directory'&&file.fileType!='Top-Level'"
+                                              :label="file.fileName"
+                                              @click.prevent.native="getFileList(file.filePath,file.fileType,file.fileName)"
+                                              :disabled="chooseFileState=='initMode'?
+                                                  false:(chooseFileState=='picChooseMode'&(file.fileType=='png'||file.fileType=='jpg')?false:true)">
+                                        <img :src="file.fileIcon" width="50px"/>
+                                    </Checkbox>
+                                    <a v-on:click="getFileList(file.filePath,file.fileType,file.fileName)">
+                                        <img :src="file.fileIcon" width="50px" style="margin-bottom: 5px"
+                                             v-if="file.fileType=='Directory'||file.fileType=='Top-Level'"/>
+                                        <p style="display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 2; white-space: normal !important;">
+                                            {{file.fileName }}
+                                        </p>
+                                    </a>
+                                </Col>
                             </CheckboxGroup>
                         </Row>
                     </Col>
@@ -97,74 +96,50 @@
                 </Row>
             </Content>
             <Footer><p class="layout-footer-center">&copy; Copyright 2018-2019 Oriole(MOTA). All Rights Reserved.</p>
-                <Button type="error" style="font-size:16px;position: absolute; right: 10px; bottom:10px;" v-on:click="countdownDo()">
-                    <Icon type="md-exit" /> 退出
-                    <span style="color: #FA8072">[{{countdownReturnTime}} 秒]</span>
-                </Button>
+                <v-countdownButton ref="countdown" style="position: absolute; right: 10px; bottom:10px;"></v-countdownButton>
             </Footer>
         </Layout>
     </div>
 </template>
 <script>
     import * as axios from "axios";
+    import ExceptionModel from '../components/ExceptionModel.vue';
+    import CountdownButton from '../components/CountdownButton.vue';
+    import PreProcessModel from  '../components/PreProcessModel.vue';
 
     export default {
+        components:{
+            'v-exception':ExceptionModel,
+            'v-countdownButton':CountdownButton,
+            'v-preProcessModel':PreProcessModel,
+        },
         data() {
             return {
-                /*
-                * 倒计时相关
-                */
-                /*默认倒计时时间*/
-                countdownReturnTime:300,
-                /*倒计时ClockID*/
-                countdownClock:0,
-                loading:false,
+                loading: false,
                 contentHeight: {
-                    height: (`${document.documentElement.clientHeight}`-300)+"px",
-                    overflowY : "scroll",
+                    height: (`${document.documentElement.clientHeight}` - 300) + "px",
+                    overflowY: "scroll",
                 },
-                path: this.$route.params.path,
-                rootPath: this.$route.params.path,
-                background: {
-                    backgroundImage: "url(" + require("../images/background.svg") + ")",
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                },
-                files: [
-                ],
-                pathTemp:[
-                ],
-                checkedFile:[
-                ],
-                checkedFileType:[
-                ],
-                checkedFilePath:[
-                ],
-                fileProcessing:false,
+                path: this.$route.params.roots[0],
+                roots: this.$route.params.roots,
+                files: [],
+                pathTemp: [],
+                checkedFile: [],
+                checkedFileType: null,
+                checkedFilePath: [],
+                chooseFileState: "initMode",
             }
         },
         mounted() {
-            this.countDownStart();
-            this.getFileList(this.path,"Directory");
+            this.$refs.countdown.countDownStart(300);
+            this.getFileList(this.path, "Directory");
         },
         methods: {
-            countDownStart() {
-                this.countdownClock = window.setInterval(() => {
-                    this.countdownReturnTime--;
-                    if(this.countdownReturnTime<0){
-                        this.countdownDo();
-                    }
-                },1000)
+            countdownReset() {
+                this.$refs.countdown.countdownReset(300);
             },
-            countdownDo(){
-                clearInterval(this.countdownClock);
-                this.$router.push("/");
-            },
-            countdownReset(){
-                this.countdownReturnTime=300;
-            },
-            getFileList(path,type,name){
-                if(type=="Directory") {
+            getFileList(path, type, name) {
+                if (type == "Directory") {
                     this.pathTemp.push(path);
                     this.files.splice(0, this.files.length);
                     axios({
@@ -174,10 +149,9 @@
                             path: path,
                         }
                     }).then((response) => {
-                        let responsedata = response.data;
-                        if (responsedata.state == "SUCCESS") {
-
-                            if(path!=this.rootPath){
+                        let responseData = response.data;
+                        if (responseData.state == "SUCCESS") {
+                            if (path != this.rootPath) {
                                 let fileInfo = {
                                     fileIcon: require('../images/folder.svg'),
                                     fileName: "...",
@@ -187,7 +161,7 @@
                                 this.files.push(fileInfo);
                             }
 
-                            let fileList = JSON.parse(responsedata.msg);
+                            let fileList = JSON.parse(responseData.msg);
                             for (let i in fileList) {
                                 let fileInfo = {
                                     fileIcon: this.getFileIcon(fileList[i]["fileType"]),
@@ -197,46 +171,52 @@
                                 };
                                 this.files.push(fileInfo);
                             }
+                        }else {
+                            this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode, responseData.msg, responseData.code, responseData.state);
                         }
-                    }).catch(function (error) {
-                        console.log(error);
+                    }).catch((reason) => {
+                        this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
                     });
-                }else if(type=="Top-Level"){
+                } else if (type == "Top-Level") {
                     this.pathTemp.pop();
-                    path=this.pathTemp.pop();
-                    this.getFileList(path,"Directory");
-                }else {
-                    this.checkedFile=[name];
-                    this.checkedFileType=[type];
-                    this.checkedFilePath=[path];
+                    path = this.pathTemp.pop();
+                    this.getFileList(path, "Directory");
+                } else {
+                    if (this.checkedFile.includes(name)) {
+                        this.checkedFile.splice(this.checkedFile.indexOf(name), 1);
+                        this.checkedFilePath.splice(this.checkedFilePath.indexOf(path), 1);
+                        if (this.checkedFile.length == 0) {
+                            this.checkedFileType = null;
+                            this.chooseFileState = "initMode";
+                        }
+                    } else {
+                        if ((this.checkedFileType == "jpg" | this.checkedFileType == "png" | this.checkedFileType == null)
+                            && (type == "jpg" | type == "png")) {
+                            this.chooseFileState = "picChooseMode";
+                            this.checkedFile.push(name)
+                            this.checkedFileType = type;
+                            this.checkedFilePath.push(path);
+                        } else {
+                            if (this.checkedFile.length > 0) {
+                                this.$Notice.error({
+                                    title: '最多选择一个非图片的文档',
+                                    desc: '除图片外，不可多选打印的文档，请逐份打印！',
+                                });
+                            } else {
+                                this.chooseFileState = "normalChooseMode";
+                                this.checkedFile.push(name)
+                                this.checkedFileType = type;
+                                this.checkedFilePath.push(path);
+                            }
+                        }
+                    }
                 }
             },
-            chooseFile(){
-                this.fileProcessing=true;
-                this.loading=true;
-                axios({
-                        method: 'get',
-                        url: 'http://localhost:8999/preProcessing',
-                        params: {
-                            fileAbsolutePath: this.checkedFilePath[0],
-                            fileType: this.checkedFileType[0],
-                            randomCode: this.$root.randomCode,
-                        }
-                    }).then((response) => {
-                    let responsedata = response.data;
-                        if (responsedata.state == "SUCCESS") {
-                            console.log("文件预处理成功");
-                            this.fileProcessing=false;
-                            clearInterval(this.countdownClock);
-                            this.$router.push({
-                                name: 'SetPrintParam',
-                            });
-                        }
-                    }).catch(function (error) {
-                        console.log(error);
-                    });
+            chooseFile() {
+                this.loading = true;
+                this.$refs.preProcessModel.fileProcessing(this,this.checkedFilePath,this.checkedFileType);
             },
-            getFileIcon(fileType){
+            getFileIcon(fileType) {
                 switch (fileType) {
                     case "doc":
                         return require('../images/doc.svg');

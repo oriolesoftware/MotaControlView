@@ -1,6 +1,6 @@
 <style scoped>
     * {
-        font-family: "站酷小薇LOGO体";
+        font-family: "PingFang SC Semibold";
     }
 
     .layout {
@@ -26,14 +26,61 @@
 </style>
 <template>
     <div class="layout">
-        <Layout class="layout">
-            <Content style="height: 100%;padding: 2%" :style="background">
-                <Modal v-model="statement" width="1200" :styles="{top: '60px'}">
-                    <p slot="header" style="color:#f60;text-align:center;font-size:18px;">
+        <Layout class="layout" @click.native="countdownReset()" @mousedown.native="touchstart">
+            <Content style="height: 100%;padding: 2%" :style="this.$root.background">
+                <v-exception ref="exceptionModel"></v-exception>
+                <Modal v-model="adminModel" width="720px">
+                    <p slot="header" style="color:#2b85e4;text-align:center">
+                        <Icon type="ios-information-circle"></Icon>
+                        <span>管理员模式</span>
+                    </p>
+                    <div style="display: flex;align-items:center;flex-direction:column">
+                        <img src="../images/admin.png" width="120">
+                        <p style="text-align:center;font-size: 18px;margin: 10px">请选择需要执行的操作（设备ID:{{this.$root.deviceID}}）</p>
+                        <div style="flex-direction:row">
+                            <Button type="warning" size="large"  @click="exitAndShutdown" style="margin: 10px">立刻关闭设备电源(60s倒计时)</Button>
+                            <Button type="warning" size="large"  @click="exitAndRebooting" style="margin: 10px">立刻重启设备(60s倒计时)</Button>
+                            <Button type="warning" size="large"  @click="exit" style="margin: 10px">立刻退出MOTA控制系统</Button>
+                            <Button type="warning" size="large"  @click="stopServer" style="margin: 10px">立刻停用设备</Button>
+                        </div>
+                    </div>
+                </Modal>
+                <Modal v-model="aboutModel" fullscreen>
+                    <p slot="header" style="color:#2b85e4;text-align:center">
+                        <Icon type="ios-information-circle"></Icon>
+                        <span>关于本系统</span>
+                    </p>
+                    <div style="display: flex;align-items:center;flex-direction:column">
+                        <img src="../images/about.png" width="720">
+                    </div>
+                    <div slot="footer">
+                        <p class="layout-footer-center">2018-2019 &copy; Oriole Software MOTA 长沙点墨文化传媒有限公司</p>
+                    </div>
+                </Modal>
+                <Modal v-model="adminLoginModel" width="720px">
+                    <p slot="header" style="color:#2b85e4;text-align:center">
+                        <Icon type="ios-information-circle"></Icon>
+                        <span>管理员模式</span>
+                    </p>
+                    <div style="display: flex;align-items:center;flex-direction:column">
+                        <img src="../images/admin.png" width="120">
+                        <p style="text-align:center;font-size: 18px;margin-top: 10px">请输入管理员密码（设备ID:{{this.$root.deviceID}}）</p>
+                        <p style="margin-bottom: 10px">若您非墨拓设备管理员请立刻退出本页面</p>
+                        <Input v-model="password" size="large" placeholder="请输入本机密码"
+                               style="width: 300px;margin-bottom: 20px;" />
+                        <v-keyboard v-on:updatekey="getPassword"></v-keyboard>
+                    </div>
+                    <div slot="footer">
+                        <Button type="success" size="large" @click="checkPassword()">确认
+                        </Button>
+                    </div>
+                </Modal>
+                <Modal v-model="statement" width="800" :styles="{top: '40px'}">
+                    <p slot="header" style="color:#f60;text-align:center;font-size:16px;">
                         <Icon type="ios-ribbon"></Icon>
                         <span>内容审查与免责声明</span>
                     </p>
-                    <div style="font-size:15px;text-indent:30px">
+                    <div style="font-size:12px;text-indent:20px">
                         <p style="color:#f60;text-align:center">第一部分</p>
                         <p>墨拓会采取必要的技术措施，确保侵权内容或违规内容不能在墨拓设备上印刷或留存。
                             若墨拓发现您打印、复印、扫描的文件、资料、书籍（包括但不限于列举的材料）内容存在或可能存在侵犯任何第三方知识产权或其他合法权益的情形，
@@ -42,7 +89,9 @@
                         <br/>
                         <p>若墨拓发现您反复打印侵权内容或违规内容，则墨拓有权随时停止为您提供服务，并采取包括移交司法机关处理等各种措施。</p>
                         <br/>
-                        <p>违法信息是指违背《中华人民共和国宪法》和《全国人大常委会关于维护互联网安全的决定》、《互联网信息服务管理办法》所明文严禁的信息以及其它法律法规明文禁止传播的各类信息。对于以下内容（统称“违规内容”），墨拓必须予以终止操作并做证据留存处理：</p><br/>
+                        <p>
+                            违法信息是指违背《中华人民共和国宪法》和《全国人大常委会关于维护互联网安全的决定》、《互联网信息服务管理办法》所明文严禁的信息以及其它法律法规明文禁止传播的各类信息。对于以下内容（统称“违规内容”），墨拓必须予以终止操作并做证据留存处理：</p>
+                        <br/>
 
                         <p>a) 反对宪法所确定的基本原则的；b) 危害国家安全，泄露国家秘密，颠覆国家政权，破坏国家统一的；c) 损害国家荣誉和利益的；d) 煽动民族仇恨、民族歧视，破坏民族团结的；e)
                             破坏国家宗教政策，宣扬邪教和封建迷信的；f) 散布谣言，扰乱社会秩序，破坏社会稳定的；g) 散布淫秽、色情、赌博、暴力、凶杀、恐怖或者教唆犯罪的；h)
@@ -67,68 +116,90 @@
                     </div>
                 </Modal>
                 <Row>
-                    <img src="../images/logo.png" width="240">
-                    <p style="text-align:center;font-size: 18px;">MOTA校园 · 免费自助打印设备</p>
-                    <p style="text-align:center;font-size: 40px;">请亲选择要执行的任务</p>
+                    <p style="text-align:right;font-size: 14px;color: #000000;">墨拓自助控制终端 V2.1.3 Bate (20191031Update正式版)</p>
+                    <img src="../images/logo.png" width="450" style="margin:20px;">
+                    <p style="text-align:center;font-size: 18px;color: #000000;">MOTA校园 · 永久免费自助打印</p>
+                    <p style="text-align:center;font-size: 40px;margin-top:10px;color: #000000;">请选择需要进行的操作</p>
                 </Row>
-                <Row style="margin-top: 5%">
+                <Row style="margin-top: 3%">
                     <Col span="8">
-                        <Card v-on:click.native="" class="card-button">
-                            <div style="min-height: 200px;">
-                                <div style="text-align:center">
-                                    <img src="../images/scanner.svg" width="120" height="120">
-                                    <h2>我 要 扫 描</h2>
-                                    <h3>Scanning</h3>
-                                </div>
+                        <Card v-on:click.native="showClause('scan')" class="card-button">
+                            <div style="display:flex;justify-content: center;align-items: center;flex-direction:column;">
+                                <img src="../images/scanner.svg" style="margin:10px;" width="130" height="130">
+                                <h2>我 要 扫 描</h2>
+                                <h3>Scan</h3>
+                            </div>
+
+                        </Card>
+                    </Col>
+                    <Col span="8">
+                        <Card v-on:click.native="showClause('print')" class="card-button">
+                            <div style="display:flex;justify-content: center;align-items: center;flex-direction:column;">
+                                <img src="../images/printer.svg" style="margin:10px;" width="130" height="130">
+                                <h2>我 要 打 印</h2>
+                                <h3>Print</h3>
                             </div>
                         </Card>
                     </Col>
                     <Col span="8">
-                        <Card v-on:click.native="print()" class="card-button">
-                            <div style="min-height: 200px;">
-                                <div style="text-align:center">
-                                    <img src="../images/printer.svg" width="120" height="120">
-                                    <h2>我 要 打 印</h2>
-                                    <h3>Printing</h3>
-                                </div>
+                        <Card v-on:click.native="showClause('copy')" class="card-button">
+                            <div style="display:flex;justify-content: center;align-items: center;flex-direction:column;">
+                                <img src="../images/copy-machine.svg" style="margin:10px;" width="130" height="130">
+                                <h2>我 要 复 印</h2>
+                                <h3>Copy</h3>
                             </div>
                         </Card>
                     </Col>
-                    <Col span="8">
-                        <Card v-on:click.native="" class="card-button">
-                            <div style="min-height: 200px;">
-                                <div style="text-align:center">
-                                    <img src="../images/copy-machine.svg" width="120" height="120">
-                                    <h2>我 要 复 印</h2>
-                                    <h3>Copy</h3>
-                                </div>
-                            </div>
-                        </Card>
-                    </Col>
+                </Row>
+                <Row style="display:flex;justify-content: center;align-items: center;">
+                    <img src="../images/index_notice.png" width="600" style="margin:20px;">
                 </Row>
             </Content>
-            <Footer><p class="layout-footer-center">2018-2019 &copy; Oriole Software MOTA</p></Footer>
+            <Footer><p class="layout-footer-center">2018-2019 &copy; Oriole Software MOTA 长沙点墨文化传媒有限公司</p>
+                <Button type="primary" style="font-size:16px;position: absolute; right: 10px; bottom:10px;" v-on:click="showAbout()">
+                    <Icon type="md-jet" />
+                    关于 点墨传媒
+                </Button>
+                <v-countdownButton ref="countdown" style="position: absolute; right: 10px; bottom:10px;"></v-countdownButton>
+            </Footer>
         </Layout>
     </div>
 </template>
 
 <script>
+    import * as axios from "axios";
+    import ExceptionModel from '../components/ExceptionModel.vue';
+    import CountdownButton from '../components/CountdownButton.vue';
+    import Keyboard from '../components/Keyboard.vue';
+
     export default {
+        components:{
+            'v-exception':ExceptionModel,
+            'v-countdownButton':CountdownButton,
+            'v-keyboard': Keyboard,
+        },
         data() {
             return {
-                background: {
-                    backgroundImage: "url(" + require("../images/background.svg") + ")",
-                    backgroundPosition: "center",
-                    backgroundSize: "100%",
-                },
                 statement: false,
-                routerPath:"",
+                routerPath: "",
+                type: "",
+                triggerCount:0,
+                adminLoginModel:false,
+                adminModel:false,
+                password:"",
+                aboutModel:false,
             }
         },
         mounted() {
-            this.$root.randomCode = this.randomWord(false, 15)
+            this.$refs.countdown.countDownStart(30,"/Carousel",false);
+            this.$root.randomCode = this.randomWord(false, 15);
+            this.getDeviceID();
+            this.getServerUrl();
         },
         methods: {
+            countdownReset() {
+                this.$refs.countdown.countdownReset(30);
+            },
             randomWord(randomFlag, min, max) {
                 let str = "";
                 let range = min;
@@ -144,12 +215,117 @@
                 }
                 return str;
             },
-            print() {
-                this.statement = true;
-                this.routerPath='/UploadFile';
+            getDeviceID(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8999/getDeviceID',
+                }).then((response) => {
+                    this.$root.deviceID=response.data;
+                }).catch((reason) => {
+                    this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
+                });
             },
-            allow(){
-                this.$router.push({path: this.routerPath});
+            getServerUrl(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8999/getServerUrl',
+                }).then((response) => {
+                    this.$root.serverUrl=response.data;
+                    this.$root.websocketUrl=response.data.replace(/http/, "ws");
+                }).catch((reason) => {
+                    this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
+                });
+            },
+            showClause(type) {
+                this.statement = true;
+                this.type = type;
+
+            },
+            allow() {
+                clearInterval(this.countdownClock);
+                this.$router.push({
+                    name: this.type == 'print' ? 'UploadFile' : 'Scan',
+                    params: {
+                        //转跳并传递参数设备路径参数
+                        type: this.type,
+                    }
+                });
+            },
+
+            touchstart(e) {
+                if(this.triggerCount==4){
+                    this.adminLoginModel=true;
+                }
+                let triggerRange=100;
+                if(e.clientY<triggerRange&&e.clientX<triggerRange){
+                    this.triggerCount=1;
+                }
+                if(e.clientY<triggerRange&&document.documentElement.clientWidth-e.clientX<triggerRange&&this.triggerCount==1){
+                    this.triggerCount=2;
+                }
+                if(document.documentElement.clientHeight-e.clientY<triggerRange&&document.documentElement.clientWidth-e.clientX<triggerRange&&this.triggerCount==2){
+                    this.triggerCount=3;
+                }
+                if(document.documentElement.clientHeight-e.clientY<triggerRange&&e.clientX<triggerRange&&this.triggerCount==3){
+                    this.triggerCount=4;
+                }
+            },
+
+            showAbout(){
+                this.aboutModel=true;
+            },
+
+            getPassword(val){
+                this.password = val;
+            },
+            checkPassword(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8999/getPassword',
+                }).then((response) => {
+                    if(response.data==this.password){
+                        this.adminLoginModel=false;
+                        this.adminModel=true;
+                    }else{
+                        this.$Modal.confirm({
+                            title: '密码错误',
+                            content: '请核对您的密码，确保输入正确！',
+                            okText: '确认',
+                            onOk: () => {
+                                this.$Modal.remove();
+                            },
+                        });
+                    }
+                }).catch((reason) => {
+                    this.closeAllModel();
+                    this.$refs.exceptionModel.openExceptionModel(this.$root.randomCode,reason.toString());
+                });
+            },
+            exit(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8999/exit',
+                })
+            },
+            exitAndShutdown(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8999/exitAndShutdown',
+                })
+            },
+            exitAndRebooting(){
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8999/exitAndRebooting',
+                })
+            },
+            stopServer(){
+                this.closeAllModel();
+                this.$refs.exceptionModel.openExceptionModel("ADMIN", "STOP SERVER - 管理员终止了本台设备运行", 10001, "STOP",true);
+            },
+            closeAllModel(){
+                this.adminLoginModel=false;
+                this.adminModel=false;
             }
         }
     }
