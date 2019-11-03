@@ -15,7 +15,7 @@
   "author": "NeoSunJz",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "babel-polyfill": "^6.26.0",
     "iview": "^3.0.0",
     "vue": "^2.5.16",
